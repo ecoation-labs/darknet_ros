@@ -1,0 +1,50 @@
+version: '3'
+
+services:
+  # roscore:
+  #   image: osrf/ros:noetic-desktop-full
+  #   network_mode: host
+  #   command: stdbuf -o L roscore
+
+  darknet:
+    build:
+      context: .
+      dockerfile: dockerfile
+    image: darknet_ros/yolo:latest
+    environment:
+      - DISPLAY=${DISPLAY}
+      - "QT_X11_NO_MITSHM=1"
+    volumes:
+      - "/tmp/.X11-unix:/tmp/.X11-unix:rw"
+      - darknet_ros:/darknet_ros
+    network_mode: host
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    command: roslaunch darknet_ros yolo_v3.launch
+  #   # command: tail -F anything
+
+  usb_cam:
+    build:
+      context: .
+      dockerfile: dockerfile
+    image: darknet_ros/usb_cam:latest
+    volumes:
+      - "/tmp/.X11-unix:/tmp/.X11-unix:rw"
+    devices:
+      - /dev/video0:/dev/video0
+    network_mode: host
+    command: roslaunch usb_cam usb_cam-test.launch
+    # command: tail -F anything
+
+volumes:
+  darknet_ros:
+   driver: local
+   driver_opts:
+    o: bind
+    type: none
+    device: ../darknet_ros
