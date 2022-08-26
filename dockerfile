@@ -1,4 +1,4 @@
-FROM nvidia/cuda:11.7.0-devel-ubuntu20.04
+FROM nvidia/cuda:11.3.0-devel-ubuntu20.04
 
 # install ros noetic
 SHELL ["/bin/bash", "-c"]
@@ -24,12 +24,18 @@ RUN apt-get update && apt-get -y install \
     ros-noetic-catkin python3-catkin-tools \
     ros-noetic-usb-cam \
     libcanberra-gtk-module \
-    libcanberra-gtk3-module 
+    libcanberra-gtk3-module \
+    wget
 
 # setup and complie code  
 ENV DEBIAN_FRONTEND=noninteractive
 RUN mkdir -p /catkin_ws/src
 COPY . ../catkin_ws/src/darknet_ros
+
+WORKDIR /catkin_ws/src/darknet_ros/darknet_ros/yolo_network_config/weights/
+RUN wget http://pjreddie.com/media/files/yolov3-tiny.weights
+RUN wget http://pjreddie.com/media/files/yolov3.weights
+
 WORKDIR /catkin_ws
     
 RUN /bin/bash -c "source /opt/ros/noetic/setup.bash \
@@ -41,7 +47,7 @@ ENV DEBIAN_FRONTEND=interactive
 ENV LD_LIBRARY_PATH = $LD_LIBRARY_PATH:/usr/local/cuda/lib64
 
 # execute
-ADD ros_entrypoint.sh /usr/bin/ros_entrypoint
-RUN chmod +x /usr/bin/ros_entrypoint
+ADD ros_entrypoint.sh /usr/bin/ros_entrypoint.sh
+RUN chmod +x /usr/bin/ros_entrypoint.sh
 
-ENTRYPOINT [ "ros_entrypoint" ]
+ENTRYPOINT [ "ros_entrypoint.sh" ]
